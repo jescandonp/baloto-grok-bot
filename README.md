@@ -1,58 +1,57 @@
 # Baloto Analyst — motor + Grok Bot
 
+<p align="center">
+  <img src="assets/avatar.svg" alt="Avatar Baloto Analyst" width="240">
+</p>
+
 Especialista para [Baloto Colombia](https://baloto.com/). Combina el alcance real de un juego de suerte y azar con analítica descriptiva del histórico: frecuencias, atrasos, pares y generadores de jugadas **aleatorias**, **ponderadas** y **mixtas**.
 
-> Cada combinación 5/43 + Superbalota 1/16 tiene la **misma** probabilidad teórica: **1 en 15.401.568**.  
-> Este proyecto no predice el sorteo. Ordena información para jugar con los ojos abiertos.
+**Avatar del Bot:** `assets/avatar.jpg` (foto) y `assets/avatar.svg` (vector). En Grok Bot → Edit Profile → subir `assets/avatar.jpg`.
+
+> Cada jugada válida de un sorteo tiene la **misma** probabilidad teórica que las demás de ese sorteo.  
+> Este proyecto no predice resultados. Ordena información para jugar con los ojos abiertos.
 
 ## Qué incluye
 
 | Pieza | Para qué |
 |---|---|
-| `docs/GROK_BOT_PROFILE.md` | Perfil listo para pegar en Grok Bot (nombre, job, reglas, primera tarea, rutinas) |
-| `src/baloto_engine.py` | Motor Python: informe + 4 modos de generación |
-| `data/baloto.csv` | Histórico 2021-05-01 → 2026-09-12 (628 sorteos, formato actual 5/43+1/16) |
-| `docs/ALCANCE.md` | Suerte vs datos, plan de premios, juego responsable |
+| `docs/GROK_BOT_PROFILE.md` | Perfil listo para pegar en Grok Bot |
+| `src/family_engine.py` | Motor unificado: Baloto, Revancha, MiLoto, ColorLoto |
+| `src/games.py` | Matrices, precios, días y URLs |
+| `scripts/fetch_data.py` | Actualiza los 4 CSV históricos |
+| `assets/avatar.jpg` / `assets/avatar.svg` | Avatar del Grok Bot |
+| `docs/ALCANCE.md` | Suerte vs datos y juego responsable |
 
-Fuente del CSV: [resultadosloteriascol.com](https://resultadosloteriascol.com/api/download/baloto.csv) (CC BY 4.0 — citar). Verificar siempre contra [baloto.com/resultados](https://baloto.com/resultados).
+Fuente CSV: [resultadosloteriascol.com](https://resultadosloteriascol.com/) (CC BY 4.0). Contrastar con [baloto.com/resultados](https://baloto.com/resultados).
 
-## Cómo jugar Baloto (resumen)
+## Familia de sorteos (no mezclar matrices)
 
-1. Elige **5 números del 1 al 43** sin repetir.
-2. Elige **1 Superbalota del 1 al 16**.
-3. Opcional: **Revancha** (+$3.000) con los mismos números, premio aparte.
-4. Sorteos **lunes, miércoles y sábado**.
-5. Precio de referencia Baloto: **$6.000**. Prohibida la venta a menores.
+| Juego | Matriz | Días | Precio | Jackpot teórico |
+|---|---|---|---|---|
+| Baloto | 5 de 43 + Superbalota 1–16 | lun / mié / sáb | $6.000 | 1 en 15.401.568 |
+| Revancha | igual que Baloto, sorteo aparte | lun / mié / sáb | +$3.000 sobre Baloto | 1 en 15.401.568 |
+| MiLoto | 5 de 39, sin Superbalota | lun / mar / jue / vie | $4.000 | 1 en 575.757 |
+| ColorLoto | 6 pares distintos de 42 (6 colores × 1–7) | lun / jue | $5.000 | 1 en 5.245.786 |
+
+Revancha **no se compra sola**: mismos números del tiquete Baloto.
 
 ## Uso del motor
 
 ```bash
 python -m pip install -r requirements.txt
-curl -sL https://resultadosloteriascol.com/api/download/baloto.csv -o data/baloto.csv
-python src/baloto_engine.py --report
-python src/baloto_engine.py --mode aleatorio --n 5
-python src/baloto_engine.py --mode frecuencia --n 5
-python src/baloto_engine.py --mode atraso --n 5
-python src/baloto_engine.py --mode mixto --n 5
-python src/baloto_engine.py --mode all --n 6 --json
+python scripts/fetch_data.py
+PYTHONPATH=src python src/family_engine.py --game all --report --n 5
+PYTHONPATH=src python src/family_engine.py --game miloto --mode mixto --n 5
+PYTHONPATH=src python src/family_engine.py --game colorloto --mode frecuencia --n 3
 ```
 
 ## Cómo crear el Grok Bot
 
-1. Abre la app [Grok Bot](https://docs.x.ai/grok-bot/get-started) y **Create your own**.
-2. Pega el contenido de `docs/GROK_BOT_PROFILE.md`.
-3. Deja este repo (o la carpeta) al alcance del Bot y dale la primera tarea del mismo documento.
-4. Opcional: rutina post-sorteo a las 22:30 COT lun/mié/sáb.
-
-## Modelos de recomendación
-
-- **Aleatorio:** uniforme. Equivale a la jugada automática oficial. Es el único modo matemáticamente “honesto” respecto al sorteo.
-- **Probabilístico-frecuencia:** muestreo ponderado por cuántas veces salió cada número en el histórico.
-- **Probabilístico-atraso:** favorece números que llevan más sorteos sin aparecer.
-- **Mixto:** 2 calientes + 2 atrasados + 1 del resto, con filtros de suma (70–150), no 0/5 impares y no 0/5 bajos.
-
-Los tres últimos son **heurísticas**. Si alguien te dice que “rompen” el 1/15.401.568, está mintiendo.
+1. App [Grok Bot](https://docs.x.ai/grok-bot/get-started) → Create your own.
+2. Nombre `Baloto Analyst`. Sube `assets/avatar.jpg`.
+3. Pega `docs/GROK_BOT_PROFILE.md`.
+4. Primera tarea: informe + 4 bloques de jugadas, sin entrar a la pasarela de pago.
 
 ## Juego responsable
 
-Define un tope semanal antes de comprar. No recuperes pérdidas subiendo la apuesta. Premios: 1 año para reclamar. Usa los límites de baloto.com. 18+.
+Define un tope semanal. No persigas pérdidas. Premios: 1 año para reclamar. 18+.
